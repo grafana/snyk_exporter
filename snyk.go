@@ -12,9 +12,10 @@ import (
 )
 
 type client struct {
-	httpClient *http.Client
-	token      string
-	baseURL    string
+	httpClient    *http.Client
+	token         string
+	baseLegacyUrl string
+	baseURL       string
 }
 
 func (c *client) getOrganizations() (orgsResponse, error) {
@@ -74,7 +75,7 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 	if err != nil {
 		return issuesResponse{}, err
 	}
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/org/%s/project/%s/aggregated-issues", c.baseURL, organizationID, projectID), &reader)
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/org/%s/project/%s/aggregated-issues", c.baseLegacyUrl, organizationID, projectID), &reader)
 	if err != nil {
 		return issuesResponse{}, err
 	}
