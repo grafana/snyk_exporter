@@ -16,10 +16,11 @@ type client struct {
 	token         string
 	baseLegacyUrl string
 	baseURL       string
+	apiVersion    string
 }
 
 func (c *client) getOrganizations() (orgsResponse, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/orgs", c.baseURL), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/orgs", c.baseLegacyUrl), nil)
 	if err != nil {
 		return orgsResponse{}, err
 	}
@@ -35,21 +36,21 @@ func (c *client) getOrganizations() (orgsResponse, error) {
 	return orgs, nil
 }
 
-func (c *client) getProjects(organization string, target string) (projectsResponse, error) {
-	postData := projectPostData{
-		Filters: projectFilters{
-			Name: target,
-		},
-	}
+func (c *client) getProjects(organizationID string, target string) (projectsResponse, error) {
 	var reader bytes.Buffer
-	err := json.NewEncoder(&reader).Encode(&postData)
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/orgs/%s/projects", c.baseURL, organizationID), &reader)
 	if err != nil {
 		return projectsResponse{}, err
 	}
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/org/%s/projects", c.baseURL, organization), &reader)
-	if err != nil {
-		return projectsResponse{}, err
+
+	q := req.URL.Query()
+	q.Add("version", c.apiVersion)
+	if len(target) != 0 {
+		q.Add("names", target)
 	}
+	req.URL.RawQuery = q.Encode()
+
 	response, err := c.do(req)
 	if err != nil {
 		return projectsResponse{}, err
@@ -62,7 +63,7 @@ func (c *client) getProjects(organization string, target string) (projectsRespon
 	return projects, nil
 }
 
-func (c *client) getIssues(organizationID, projectID string) (issuesResponse, error) {
+func (c *client) getIssues(organizationID string, projectID string) (issuesResponse, error) {
 	postData := issuesPostData{
 		Filters: issueFilters{
 			Severities: []string{
@@ -93,7 +94,7 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 
 func (c *client) do(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", c.token))
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Type", "application/vnd.api+json")
 	response, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err

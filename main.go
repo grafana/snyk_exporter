@@ -58,6 +58,7 @@ func main() {
 	flags := kingpin.New("snyk_exporter", "Snyk exporter for Prometheus. Provide your Snyk API token and the organization(s) to scrape to expose Prometheus metrics.")
 	snykAPIURL := flags.Flag("snyk.api-url", "Snyk API URL (legacy)").Default("https://snyk.io/api/v1").String()
 	snykRESTAPIURL := flags.Flag("snyk.rest-api-url", "Snyk REST API URL").Default("https://api.snyk.io/rest").String()
+	snykRESTAPIVersion := flags.Flag("snyk.rest-api-version", "Snyk REST API Version").Default("2023-06-22").String()
 	snykAPIToken := flags.Flag("snyk.api-token", "Snyk API token").Required().String()
 	snykInterval := flags.Flag("snyk.interval", "Polling interval for requesting data from Snyk API in seconds").Short('i').Default("600").Int()
 	snykOrganizations := flags.Flag("snyk.organization", "Snyk organization ID to scrape projects from (can be repeated for multiple organizations)").Strings()
@@ -151,7 +152,7 @@ func main() {
 		defer wg.Done()
 		log.Info("Snyk API scraper starting")
 		defer log.Info("Snyk API scraper stopped")
-		err := runAPIPolling(ctx, *snykAPIURL, *snykRESTAPIURL, *snykAPIToken, *snykOrganizations, *snykTargets, secondDuration(*snykInterval), secondDuration(*requestTimeout))
+		err := runAPIPolling(ctx, *snykAPIURL, *snykRESTAPIURL, *snykRESTAPIVersion, *snykAPIToken, *snykOrganizations, *snykTargets, secondDuration(*snykInterval), secondDuration(*requestTimeout))
 		if err != nil {
 			componentFailed <- fmt.Errorf("snyk api scraper: %w", err)
 		}
@@ -171,7 +172,7 @@ func secondDuration(seconds int) time.Duration {
 	return time.Duration(seconds) * time.Second
 }
 
-func runAPIPolling(ctx context.Context, url string, restUrl string, token string, organizationIDs []string, targets []string, requestInterval, requestTimeout time.Duration) error {
+func runAPIPolling(ctx context.Context, url string, restUrl string, apiVersion string, token string, organizationIDs []string, targets []string, requestInterval, requestTimeout time.Duration) error {
 	client := client{
 		httpClient: &http.Client{
 			Timeout: requestTimeout,
@@ -179,6 +180,7 @@ func runAPIPolling(ctx context.Context, url string, restUrl string, token string
 		token:         token,
 		baseLegacyUrl: url,
 		baseURL:       restUrl,
+		apiVersion:    apiVersion,
 	}
 	organizations, err := getOrganizations(&client, organizationIDs)
 	if err != nil {

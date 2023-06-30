@@ -185,7 +185,7 @@ func TestRunAPIPolling_issuesTimeout(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		// passing server.URL twice -- once as the legacy url and once as the modern url
-		err := runAPIPolling(ctx, server.URL, server.URL, "token", nil, nil, 20*time.Millisecond, 1*time.Millisecond)
+		err := runAPIPolling(ctx, server.URL, server.URL, "2023-06-22", "token", nil, nil, 20*time.Millisecond, 1*time.Millisecond)
 		if err != nil {
 			t.Errorf("unexpected error result: %v", err)
 		}
