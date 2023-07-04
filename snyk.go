@@ -136,11 +136,6 @@ type org struct {
 	} `json:"group,omitempty"`
 }
 
-// type projectsResponse struct {
-// 	Org      projectOrg `json:"org,omitempty"`
-// 	Projects []project  `json:"projects,omitempty"`
-// }
-
 type projectsResponse struct {
 	JsonApi jsonApi   `json:"jsonapi,omitempty"`
 	Data    []project `json:"data,omitempty"`
