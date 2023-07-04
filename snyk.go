@@ -46,22 +46,54 @@ func (c *client) getProjects(organizationID string, target string) (projectsResp
 
 	q := req.URL.Query()
 	q.Add("version", c.apiVersion)
+	q.Add("limit", "50")
 	if len(target) != 0 {
 		q.Add("names", target)
 	}
 	req.URL.RawQuery = q.Encode()
 
+	log.Debugf("Fetching Projects...")
 	response, err := c.do(req)
 	if err != nil {
 		return projectsResponse{}, err
 	}
 
-	var projects projectsResponse
-	err = json.NewDecoder(response.Body).Decode(&projects)
+	var allProjects projectsResponse
+	err = json.NewDecoder(response.Body).Decode(&allProjects)
 	if err != nil {
 		return projectsResponse{}, err
 	}
-	return projects, nil
+
+	for {
+		if len(allProjects.Links.Next) == 0 {
+			break
+		}
+
+		var paginatedReader bytes.Buffer
+		req, err := http.NewRequest(http.MethodGet, c.baseURL+allProjects.Links.Next, &paginatedReader)
+		if err != nil {
+			return projectsResponse{}, err
+		}
+
+		log.Debugf("Fetching Projects... (cursor: %s)", req.URL.Query().Get("starting_after"))
+
+		response, err := c.do(req)
+		if err != nil {
+			return projectsResponse{}, err
+		}
+
+		var projects projectsResponse
+		err = json.NewDecoder(response.Body).Decode(&projects)
+		if err != nil {
+			return projectsResponse{}, err
+		}
+
+		allProjects.Data = append(allProjects.Data, projects.Data...)
+		allProjects.Links = projects.Links
+	}
+
+	log.Debugf("Found %d Projects.", len(allProjects.Data))
+	return allProjects, nil
 }
 
 func (c *client) getIssues(organizationID string, projectID string) (issuesResponse, error) {
@@ -207,6 +239,7 @@ type projectRelationshipLinks struct {
 
 type projectLinks struct {
 	Next string `json:"next,omitempty"`
+	Prev string `json:"prev,omitempty"`
 }
 
 type issuesResponse struct {

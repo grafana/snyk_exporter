@@ -340,8 +340,7 @@ func collect(ctx context.Context, client *client, organization org, target strin
 			project:     project.Attributes.Name,
 			projectType: project.Attributes.Type,
 			results:     results,
-			// isMonitored: project.IsMonitored,
-			isMonitored: true, // TODO: FIX THIS
+			isMonitored: project.Attributes.Status == "active",
 		})
 		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Attributes.Name)
 		// stop right away in case of the context being cancelled. This ensures that
