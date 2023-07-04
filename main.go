@@ -323,26 +323,27 @@ func collect(ctx context.Context, client *client, organization org, target strin
 	}
 
 	var gaugeResults []gaugeResult
-	for _, project := range projects.Projects {
+	for _, project := range projects.Data {
 		start := time.Now()
 		issues, err := client.getIssues(organization.ID, project.ID)
 		duration := time.Since(start)
 		if err != nil {
-			log.Errorf("Failed to get issues for organization %s (%s) and project %s (%s): duration %v:  %v", organization.Name, organization.ID, project.Name, project.ID, duration, err)
+			log.Errorf("Failed to get issues for organization %s (%s) and project %s (%s): duration %v:  %v", organization.Name, organization.ID, project.Attributes.Name, project.ID, duration, err)
 			continue
 		}
 		results := aggregateIssues(issues.Issues)
 
 		gaugeResults = append(gaugeResults, gaugeResult{
 			organization: organization.Name,
-			target:       strings.Split(project.Name, ":")[0],
+			target:       strings.Split(project.Attributes.Name, ":")[0],
 			//target:      project.Name,
-			project:     project.Name,
-			projectType: project.ProjectType,
+			project:     project.Attributes.Name,
+			projectType: project.Attributes.Type,
 			results:     results,
-			isMonitored: project.IsMonitored,
+			// isMonitored: project.IsMonitored,
+			isMonitored: true, // TODO: FIX THIS
 		})
-		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Name)
+		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Attributes.Name)
 		// stop right away in case of the context being cancelled. This ensures that
 		// we don't wait for a complete collect run for all projects before
 		// stopping.

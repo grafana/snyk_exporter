@@ -56,12 +56,6 @@ func (c *client) getProjects(organizationID string, target string) (projectsResp
 		return projectsResponse{}, err
 	}
 
-	// resDump, err := httputil.DumpResponse(response, true)
-	// log.Info(string(resDump))
-
-	b, err := ioutil.ReadAll(response.Body)
-	log.Info(string(b))
-
 	var projects projectsResponse
 	err = json.NewDecoder(response.Body).Decode(&projects)
 	if err != nil {
@@ -137,9 +131,9 @@ type org struct {
 }
 
 type projectsResponse struct {
-	JsonApi jsonApi   `json:"jsonapi,omitempty"`
-	Data    []project `json:"data,omitempty"`
-	Links   links     `json:"links,omitEmpty"`
+	JsonApi jsonApi      `json:"jsonapi,omitempty"`
+	Data    []project    `json:"data,omitempty"`
+	Links   projectLinks `json:"links,omitEmpty"`
 }
 
 type jsonApi struct {
@@ -159,18 +153,18 @@ type projectMeta struct {
 }
 
 type projectAttributes struct {
-	Name                string            `json:"name,omitempty"`
-	Type                string            `json:"type,omitempty"`
-	TargetFile          string            `json:"target_file,omitempty"`
-	TargetReference     string            `json:"target_reference,omitempty"`
-	Origin              string            `json:"origin,omitempty"`
-	Created             string            `json:"created,omitempty"`
-	Status              string            `json:"status,omitempty"`
-	BusinessCriticality []string          `json:"business_criticality,omitempty"`
-	Environment         []string          `json:"environment,omitempty"`
-	Lifecycle           []string          `json:"lifecycle,omitempty"`
-	Tags                []projectTag      `json:"tags,omitempty"`
-	Settings            []projectSettings `json:"settings,omitempty"`
+	Name                string          `json:"name,omitempty"`
+	Type                string          `json:"type,omitempty"`
+	TargetFile          string          `json:"target_file,omitempty"`
+	TargetReference     string          `json:"target_reference,omitempty"`
+	Origin              string          `json:"origin,omitempty"`
+	Created             string          `json:"created,omitempty"`
+	Status              string          `json:"status,omitempty"`
+	BusinessCriticality []string        `json:"business_criticality,omitempty"`
+	Environment         []string        `json:"environment,omitempty"`
+	Lifecycle           []string        `json:"lifecycle,omitempty"`
+	Tags                []projectTag    `json:"tags,omitempty"`
+	Settings            projectSettings `json:"settings,omitempty"`
 }
 
 type projectTag struct {
@@ -211,7 +205,7 @@ type projectRelationshipLinks struct {
 	Related string `json:"related,omitempty"`
 }
 
-type links struct {
+type projectLinks struct {
 	Next string `json:"next,omitempty"`
 }
 
