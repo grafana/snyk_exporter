@@ -55,6 +55,13 @@ func (c *client) getProjects(organizationID string, target string) (projectsResp
 	if err != nil {
 		return projectsResponse{}, err
 	}
+
+	// resDump, err := httputil.DumpResponse(response, true)
+	// log.Info(string(resDump))
+
+	b, err := ioutil.ReadAll(response.Body)
+	log.Info(string(b))
+
 	var projects projectsResponse
 	err = json.NewDecoder(response.Body).Decode(&projects)
 	if err != nil {
@@ -129,22 +136,96 @@ type org struct {
 	} `json:"group,omitempty"`
 }
 
+// type projectsResponse struct {
+// 	Org      projectOrg `json:"org,omitempty"`
+// 	Projects []project  `json:"projects,omitempty"`
+// }
+
 type projectsResponse struct {
-	Org      projectOrg `json:"org,omitempty"`
-	Projects []project  `json:"projects,omitempty"`
+	JsonApi jsonApi   `json:"jsonapi,omitempty"`
+	Data    []project `json:"data,omitempty"`
+	Links   links     `json:"links,omitEmpty"`
 }
 
-type projectOrg struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+type jsonApi struct {
+	Version string `json:"version,omitempty"`
 }
 
 type project struct {
-	Name        string `json:"name,omitempty"`
-	ID          string `json:"id,omitempty"`
-	ProjectType string `json:"type,omitempty"`
-	IsMonitored bool   `json:"isMonitored,omitempty"`
+	Type          string               `json:"type,omitempty"`
+	ID            string               `json:"id,omitempty"`
+	Meta          projectMeta          `json:"meta,omitempty"`
+	Attributes    projectAttributes    `json:"attributes,omitempty"`
+	Relationships projectRelationships `json:"relationships,omitempty"`
 }
+
+type projectMeta struct {
+	MonitoredAt string `json:"cli_monitored_at,omitempty"`
+}
+
+type projectAttributes struct {
+	Name                string            `json:"name,omitempty"`
+	Type                string            `json:"type,omitempty"`
+	TargetFile          string            `json:"target_file,omitempty"`
+	TargetReference     string            `json:"target_reference,omitempty"`
+	Origin              string            `json:"origin,omitempty"`
+	Created             string            `json:"created,omitempty"`
+	Status              string            `json:"status,omitempty"`
+	BusinessCriticality []string          `json:"business_criticality,omitempty"`
+	Environment         []string          `json:"environment,omitempty"`
+	Lifecycle           []string          `json:"lifecycle,omitempty"`
+	Tags                []projectTag      `json:"tags,omitempty"`
+	Settings            []projectSettings `json:"settings,omitempty"`
+}
+
+type projectTag struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type projectSettings struct {
+	RecurringTests projectSettingsRecurringTests `json:"recurring_tests,omitempty"`
+	PullRequests   projectSettingsPullRequests   `json:"pull_requests,omitempty"`
+}
+
+type projectSettingsRecurringTests struct {
+	Frequency string `json:"frequency,omitempty"`
+}
+
+type projectSettingsPullRequests struct {
+	FailOnlyForIssuesWithFix bool `json:"fail_only_for_issues_with_fix,omitempty"`
+}
+
+type projectRelationships struct {
+	Organization projectRelationship `json:"organization,omitempty"`
+	Target       projectRelationship `json:"target,omitempty"`
+	Importer     projectRelationship `json:"importer,omitempty"`
+}
+
+type projectRelationship struct {
+	Data  projectRelationshipData  `json:"data,omitempty"`
+	Links projectRelationshipLinks `json:"links,omitempty"`
+}
+
+type projectRelationshipData struct {
+	Type string `json:"type,omitempty"`
+	ID   string `json:"id,omitempty"`
+}
+
+type projectRelationshipLinks struct {
+	Related string `json:"related,omitempty"`
+}
+
+type links struct {
+	Next string `json:"next,omitempty"`
+}
+
+// type project struct {
+// 	Name        string `json:"name,omitempty"`
+// 	ID          string `json:"id,omitempty"`
+// 	ProjectType string `json:"type,omitempty"`
+// 	IsMonitored bool   `json:"isMonitored,omitempty"`
+// }
 
 type issuesResponse struct {
 	Issues []issue `json:"issues,omitempty"`
